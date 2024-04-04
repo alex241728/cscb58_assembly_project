@@ -53,6 +53,8 @@
 .eqv KEY_S 115
 .eqv KEY_D 100
 .eqv KEY_P 112
+.eqv KEY_R 114
+.eqv KEY_Q 113
 
 # win screen start
 # win screen start x is always 0
@@ -279,6 +281,7 @@ TICK:
 				beq $t0, KEY_W, RESPOND_TO_W
 		
 			CHECK_A_PRESS:
+				
 				beq $t0, KEY_A, RESPOND_TO_A
 	
 			CHECK_S_PRESS:
@@ -286,6 +289,15 @@ TICK:
 		
 			CHECK_D_PRESS:
 				beq $t0, KEY_D, RESPOND_TO_D	
+				
+			CHECK_R_PRESS:
+				beq $t0, KEY_R, RESPOND_TO_R
+				
+			CHECK_Q_PRESS:
+				beq $t0, KEY_Q, RESPOND_TO_Q
+		
+		jal IS_VALID_LOCATION
+		beqz $v0, COLLISION
 		
 		RESPOND_TO_W:
 			jal HANDLE_W
@@ -302,6 +314,13 @@ TICK:
 		RESPOND_TO_D:
 			jal HANDLE_D
 			j COLLISION
+			
+		RESPOND_TO_R:
+			jal RESET
+			j TICK_SLEEP
+			
+		RESPOND_TO_Q:
+			j END
 	
 	
 	# ------------------------ End of Input --------------------------
@@ -1208,7 +1227,7 @@ HANDLE_A:	# handle input a
 		
 		subi $t2, $t1, 1
 		
-		beqz $t2, STOP_GOING_LEFT
+		bltz $t2, STOP_GOING_LEFT
 		
 		subi $t1, $t1, PLAYER_HORIZONTAL_SPEED
 		
@@ -1238,7 +1257,7 @@ HANDLE_D:	# handle input d
 		
 		addi $t2, $t1, 1
 		
-		beq $t2, 63, STOP_GOING_RIGHT
+		bge $t2, 63, STOP_GOING_RIGHT
 		
 		addi $t1, $t1, PLAYER_HORIZONTAL_SPEED
 		
@@ -1253,8 +1272,7 @@ HANDLE_D:	# handle input d
 HANDLE_P:	# handle input p
 		li $s0, 0
 		
-		jr $ra
-		
+		jr $ra		
 		
 # -------------------- End of Handle Input ------------------------		
 		
@@ -1477,7 +1495,22 @@ CHECK_ORANGE_MUSH_COLLISION:	# check if the player collides with the orange mush
 	li $v0, 1
 	
 	NO_ORANGE_MUSH_COLLISION:
-		 jr $ra	
+		 jr $ra
+		 
+IS_VALID_LOCATION:	# if the player's location is valid, return 1. otherwise return 0.
+	li $v0, 0
+	
+	la $t0, PLAYER
+	lw $t1, 0($t0)
+	blez $t1, INVALID
+	bge $t1, 63, INVALID
+	
+	li $v0, 1
+	
+	INVALID:
+		jr $ra
+	
+	
 	
 # -------------------- End of Handle Collision ----------------------		
 
